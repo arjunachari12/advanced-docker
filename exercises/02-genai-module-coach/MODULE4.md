@@ -8,7 +8,7 @@ In this module you will:
 - build the production Docker image in CI
 - generate an SBOM in CI
 - scan the image with Trivy in CI
-- optionally push the image to Docker Hub
+- push the image to Docker Hub after the scan step passes
 
 The workflow file is at the repo root:
 
@@ -47,6 +47,9 @@ Generate SBOM with Syft
 Upload SBOM artifact
 Scan image with Trivy
 Upload Trivy SARIF results
+Login to Docker Hub
+Tag image for Docker Hub
+Push image to Docker Hub
 ```
 
 ## Part 2: Test the Same Build Locally
@@ -85,7 +88,37 @@ Clean up:
 docker rm -f genai-chat-ci-test
 ```
 
-## Part 3: Commit the Workflow
+## Part 3: Configure Docker Hub Secrets
+
+Create a Docker Hub repository named:
+
+```text
+genai-chat
+```
+
+Create a Docker Hub access token, then add these GitHub repository secrets:
+
+```text
+DOCKERHUB_USERNAME
+DOCKERHUB_TOKEN
+```
+
+In GitHub:
+
+```text
+Repository -> Settings -> Secrets and variables -> Actions -> New repository secret
+```
+
+The workflow pushes these tags on `push` to `main`:
+
+```text
+DOCKERHUB_USERNAME/genai-chat:latest
+DOCKERHUB_USERNAME/genai-chat:<git-sha>
+```
+
+Pull requests still build, generate an SBOM, and scan, but they do not push to Docker Hub.
+
+## Part 4: Commit the Workflow
 
 From the repo root:
 
@@ -103,7 +136,7 @@ Push:
 git push
 ```
 
-## Part 4: Watch the Workflow in GitHub
+## Part 5: Watch the Workflow in GitHub
 
 Open your GitHub repository.
 
@@ -125,53 +158,10 @@ Check that these steps pass:
 Build image
 Generate SBOM with Syft
 Scan image with Trivy
+Push image to Docker Hub
 ```
 
 Download the SBOM artifact from the workflow run.
-
-## Part 5: Optional Docker Hub Push from CI
-
-To push from GitHub Actions, create Docker Hub credentials.
-
-In GitHub:
-
-```text
-Repository -> Settings -> Secrets and variables -> Actions -> New repository secret
-```
-
-Create:
-
-```text
-DOCKERHUB_USERNAME
-DOCKERHUB_TOKEN
-```
-
-Add this login step after Buildx setup:
-
-```yaml
-- name: Login to Docker Hub
-  uses: docker/login-action@v3
-  with:
-    username: ${{ secrets.DOCKERHUB_USERNAME }}
-    password: ${{ secrets.DOCKERHUB_TOKEN }}
-```
-
-Change the build step if you want to push:
-
-```yaml
-- name: Build and push image
-  uses: docker/build-push-action@v6
-  with:
-    context: exercises/02-genai-module-coach
-    file: exercises/02-genai-module-coach/Dockerfile
-    platforms: linux/amd64,linux/arm64
-    tags: |
-      ${{ secrets.DOCKERHUB_USERNAME }}/genai-chat:latest
-      ${{ secrets.DOCKERHUB_USERNAME }}/genai-chat:${{ github.sha }}
-    push: true
-```
-
-For the first CI lesson, keep `load: true` and do not push. Add Docker Hub push after students understand build, SBOM, and scan.
 
 ## Part 6: Troubleshooting
 
@@ -212,4 +202,3 @@ Remove the local CI test image if needed:
 ```bash
 docker rmi genai-chat:ci-test
 ```
-

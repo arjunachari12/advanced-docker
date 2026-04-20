@@ -54,3 +54,22 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results.sarif
+
+      - name: Login to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Tag image for Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker tag genai-chat:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/genai-chat:${{ github.sha }}
+          docker tag genai-chat:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/genai-chat:latest
+
+      - name: Push image to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/genai-chat:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/genai-chat:latest
