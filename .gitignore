@@ -1,0 +1,20 @@
+# Local Codex/session marker
+.codex
+
+# Generated Python files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Training source and overview files to keep out of the staged module commits
+/2025 - Next Level Docker for DevOps, GenAI, and Agentic Workflows.docx
+/agenda-analysis.md
+/README.md
+
+# Later-module material excluded until those modules are ready to commit
+.devcontainer/
+.github/
+exercises/02-genai-module-coach/.devcontainer/
+exercises/02-genai-module-coach/.github/
+exercises/02-genai-module-coach/security/

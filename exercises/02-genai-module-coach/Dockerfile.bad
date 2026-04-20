@@ -1,0 +1,19 @@
+# Intentional anti-patterns for Module 1 discussion.
+# Do not use this Dockerfile for production.
+
+FROM python:latest
+
+WORKDIR /app
+
+# Bad: copying everything before installing dependencies ruins layer caching.
+COPY . .
+
+# Bad: installs as root, no pinned Python base image, no virtual environment.
+RUN pip install -r requirements.txt
+
+# Bad: localhost points to this app container, not the Ollama container.
+ENV OLLAMA_BASE_URL=http://localhost:11434
+
+# Bad: reload mode is for development, not production containers.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+
