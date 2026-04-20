@@ -1,6 +1,6 @@
 # Exercise 1: Run a Local Ollama Model in Docker
 
-## Goal
+## Goal.
 
 Run Ollama as a Docker container, pull a small local model, and interact with it from:
 
