@@ -1,0 +1,13 @@
+{
+  "name": "simple-python-devcontainer",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python"
+      ]
+    }
+  },
+  "postCreateCommand": "python --version && python hello.py",
+  "remoteUser": "vscode"
+}
