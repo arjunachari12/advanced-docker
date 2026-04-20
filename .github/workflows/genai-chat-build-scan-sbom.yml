@@ -42,7 +42,7 @@ jobs:
           path: genai-chat-sbom.spdx.json
 
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: genai-chat:${{ github.sha }}
           format: sarif
