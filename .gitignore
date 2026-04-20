@@ -12,9 +12,6 @@ __pycache__/
 /agenda-analysis.md
 /README.md
 
-# Later-module material excluded until those modules are ready to commit
-.devcontainer/
-.github/
-exercises/02-genai-module-coach/.devcontainer/
-exercises/02-genai-module-coach/.github/
-exercises/02-genai-module-coach/security/
+# Generated lab outputs
+exercises/02-genai-module-coach/sbom*.json
+exercises/02-genai-module-coach/trivy-report.json

@@ -7,6 +7,7 @@ Students will use the same codebase across the modules:
 - Module 1: Docker build best practices, multi-stage builds, Buildx, and multi-architecture image push
 - Module 2: image security, SBOM generation, and vulnerability scanning
 - Module 3: DevContainer workflow for a consistent student environment
+- Module 4: GitHub Actions CI/CD for build, SBOM, scan, and Docker Hub push
 
 ## Files
 
@@ -20,6 +21,7 @@ exercises/02-genai-module-coach/
 ├── MODULE1.md
 ├── MODULE2.md
 ├── MODULE3.md
+├── MODULE4.md
 ├── compose.yaml
 ├── requirements.txt
 └── README.md
@@ -136,6 +138,7 @@ Then continue:
 ```text
 MODULE2.md
 MODULE3.md
+MODULE4.md
 ```
 
 ## Cleanup
@@ -151,4 +154,3 @@ Remove the Ollama model volume only if you want to free disk space:
 ```bash
 docker compose down -v
 ```
-
