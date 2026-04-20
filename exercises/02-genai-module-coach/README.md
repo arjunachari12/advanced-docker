@@ -1,25 +1,23 @@
-# Exercise 2: Production-Ready Docker with a Simple Ollama GenAI App
+# Exercise 2: Production-Ready Docker for a Simple GenAI App
 
-## Use Case
+## What You Will Learn
 
-This exercise uses a small GenAI chat application as the common use case for teaching the first four workshop modules:
+This exercise uses one simple Python GenAI chat app that calls a local Ollama container.
 
-- Module 1: Advanced Docker Image Building
-- Module 2: Image Security, SBOMs, and Vulnerability Scanning
-- Module 3: DevContainers and AI-Augmented Development with MCP-style tooling
-- Module 4: CI/CD Automation with GitHub Actions and Docker
+Use this same app to teach:
 
-The application is intentionally simple: a Python FastAPI web app sends chat messages to a local Ollama model running in Docker.
+- Module 1: Docker image build best practices, multi-stage builds, and multi-architecture builds with Buildx
+- Module 2: Image security, SBOM generation with Syft, and vulnerability scanning with Trivy
+- Module 3: DevContainer basics for a repeatable development environment
+- Module 4: CI/CD ideas for build, scan, SBOM, and push
 
-## Files
+## Folder Contents
 
 ```text
 exercises/02-genai-module-coach/
 ├── app/
 │   ├── main.py
 │   └── smoke_test.py
-├── security/
-│   └── sbom-and-scan.md
 ├── Dockerfile
 ├── Dockerfile.bad
 ├── compose.yaml
@@ -27,21 +25,9 @@ exercises/02-genai-module-coach/
 └── README.md
 ```
 
-The CI workflow for this exercise is at repo root:
-
-```text
-.github/workflows/genai-chat-build-scan-sbom.yml
-```
-
-The DevContainer config is also at repo root:
-
-```text
-.devcontainer/devcontainer.json
-```
-
 ## Before You Start
 
-### Ubuntu on a VM
+### Ubuntu VM
 
 ```bash
 docker --version
@@ -49,7 +35,7 @@ docker compose version
 docker run hello-world
 ```
 
-If your user cannot run Docker:
+If Docker permission fails:
 
 ```bash
 sudo usermod -aG docker "$USER"
@@ -58,56 +44,77 @@ newgrp docker
 
 ### Ubuntu on Windows WSL 2
 
-Use Docker Desktop for Windows with WSL integration enabled for your Ubuntu distro.
+Use Docker Desktop on Windows.
 
-From Ubuntu WSL:
+In Docker Desktop:
 
-```bash
-docker --version
-docker compose version
-docker run hello-world
-```
+- Start Docker Desktop
+- Enable WSL integration for your Ubuntu distro
+- Restart Ubuntu WSL if needed
 
-If Docker is not reachable:
-
-1. Start Docker Desktop on Windows.
-2. Enable WSL integration for your Ubuntu distro.
-3. Restart WSL from PowerShell:
+From PowerShell:
 
 ```powershell
 wsl --shutdown
 ```
 
-Then reopen Ubuntu WSL and retry `docker ps`.
+Open Ubuntu again and test:
 
-## Start the Lab
+```bash
+docker ps
+docker compose version
+```
 
-Run these commands from this folder:
+## Start Ollama and the GenAI App
+
+Run from this folder:
+
+```bash
+cd exercises/02-genai-module-coach
+```
+
+Start Ollama:
 
 ```bash
 docker compose up -d ollama
+```
+
+Pull the local model:
+
+```bash
 docker compose exec ollama ollama pull qwen2.5:0.5b
+```
+
+Build and run the app:
+
+```bash
 docker compose up --build -d genai-chat
 ```
 
-Open:
+Open the app:
 
 ```text
 http://localhost:8080
 ```
 
-Try:
+Test with curl:
 
-```text
-Explain Docker multi-stage builds in three bullets.
+```bash
+curl http://localhost:8080/health
 ```
 
-Call the API directly:
+Expected:
+
+```json
+{"status":"ok"}
+```
+
+Send a chat message:
 
 ```bash
 curl http://localhost:8080/api/chat \
   -H "Content-Type: application/json" \
-  -d '{"message":"Say hello from a Dockerized GenAI app."}'
+  -d '{"message":"Explain Docker multi-stage builds in three bullets."}'
 ```
 
 Run the smoke test:
@@ -116,176 +123,419 @@ Run the smoke test:
 python3 app/smoke_test.py http://localhost:8080
 ```
 
-## Module 1: Advanced Docker Image Building
+## Module 1: Docker Build Best Practices
 
-Compare the wrong and right Dockerfiles.
+This folder has two Dockerfiles.
 
 Wrong way:
+
+```text
+Dockerfile.bad
+```
+
+Right way:
+
+```text
+Dockerfile
+```
+
+### Build the Bad Image
 
 ```bash
 docker build -f Dockerfile.bad -t genai-chat:bad .
 ```
 
-Right way:
+Problems in `Dockerfile.bad`:
+
+- Uses `python:latest`
+- Copies all files before installing dependencies
+- Installs packages as root
+- Uses development reload mode
+- Sets `OLLAMA_BASE_URL` to `localhost`, which is wrong inside a container
+
+### Build the Production Image
 
 ```bash
 docker build -f Dockerfile -t genai-chat:prod .
 ```
 
-Compare size and layers:
+Good practices in `Dockerfile`:
+
+- Uses multi-stage build
+- Copies `requirements.txt` before app code for better cache reuse
+- Uses a slim Python runtime image
+- Runs as a non-root user
+- Adds a container health check
+- Uses Compose service DNS: `http://ollama:11434`
+
+### Compare Images
 
 ```bash
 docker images | grep genai-chat
+```
+
+Compare layers:
+
+```bash
 docker history genai-chat:bad
 docker history genai-chat:prod
 ```
 
-Teaching points:
+## Module 1: Multi-Architecture Build with Docker Buildx
 
-- `Dockerfile.bad` uses `python:latest`, copies the whole build context too early, installs as root, and runs development reload mode.
-- `Dockerfile` uses a multi-stage build, dependency caching, a slim runtime stage, a non-root user, and a health check.
-- `compose.yaml` uses service DNS: the app talks to Ollama through `http://ollama:11434`, not `localhost`.
+Goal:
 
-## Module 2: Image Security, SBOMs, and Vulnerability Scanning
+Build one image tag that can run on both:
+
+- `linux/amd64`
+- `linux/arm64`
+
+### Step 1: Check Buildx
+
+```bash
+docker buildx version
+docker buildx ls
+```
+
+### Step 2: Create a Buildx Builder
+
+Use the Docker container driver for multi-architecture builds:
+
+```bash
+docker buildx create --use --driver docker-container
+```
+
+Bootstrap the builder:
+
+```bash
+docker buildx inspect --bootstrap
+```
+
+### Step 3: Test a Local Build First
+
+Use `--load` for a single-platform local test:
+
+```bash
+docker buildx build -t genai-chat:buildx-local --load .
+```
+
+Run it:
+
+```bash
+docker run --rm -d \
+  --name genai-chat-buildx-local \
+  -p 8081:8080 \
+  -e OLLAMA_BASE_URL=http://host.docker.internal:11434 \
+  genai-chat:buildx-local
+```
+
+Check health:
+
+```bash
+curl http://localhost:8081/health
+```
+
+Clean up:
+
+```bash
+docker rm -f genai-chat-buildx-local
+```
+
+### Step 4: Login to Docker Hub
+
+```bash
+docker login
+```
+
+Set your Docker Hub username:
+
+```bash
+export DOCKERHUB_USERNAME=yourname
+```
+
+Example:
+
+```bash
+export DOCKERHUB_USERNAME=arjunachari12
+```
+
+### Step 5: Build and Push Multi-Architecture Image
+
+Replace `yourname` with your Docker Hub username.
+
+Simple command:
+
+```bash
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t yourname/genai-chat:latest \
+  --push .
+```
+
+Using an environment variable:
+
+```bash
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t "$DOCKERHUB_USERNAME/genai-chat:latest" \
+  --push .
+```
+
+Versioned tag:
+
+```bash
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t "$DOCKERHUB_USERNAME/genai-chat:1.0.0" \
+  -t "$DOCKERHUB_USERNAME/genai-chat:latest" \
+  --push .
+```
+
+### Step 6: Inspect the Multi-Arch Image
+
+```bash
+docker buildx imagetools inspect "$DOCKERHUB_USERNAME/genai-chat:latest"
+```
+
+Look for:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+### Important Notes
+
+- `--load` works for local single-platform builds.
+- `--push` is used for real multi-platform builds.
+- Docker cannot load a multi-platform manifest list into the classic local image store.
+- If arm64 builds are slow on an amd64 machine, that is normal because emulation may be used.
+
+## Module 2: Security, SBOM, and Vulnerability Scanning
+
+For this module, use the bad image first so students can inspect and scan it.
+
+### Build an Insecure Image
+
+```bash
+docker build -f Dockerfile.bad -t insecure-image:latest .
+```
+
+Check it:
+
+```bash
+docker images | grep insecure-image
+```
+
+## Module 2: Syft SBOM
+
+Syft creates a Software Bill of Materials.
+
+### Install Syft
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh
+```
+
+Move it into your path:
+
+```bash
+sudo mv ./bin/syft /usr/local/bin/
+```
+
+Check version:
+
+```bash
+syft version
+```
+
+### Generate SBOM Output
+
+Show packages in the terminal:
+
+```bash
+syft insecure-image:latest
+```
+
+Table output:
+
+```bash
+syft insecure-image:latest -o table
+```
+
+JSON output:
+
+```bash
+syft insecure-image:latest -o json > sbom.json
+```
+
+SPDX JSON output:
+
+```bash
+syft insecure-image:latest -o spdx-json > sbom.spdx.json
+```
+
+CycloneDX JSON output:
+
+```bash
+syft insecure-image:latest -o cyclonedx-json > sbom.cyclonedx.json
+```
+
+### What to Discuss
+
+- What packages are inside the image?
+- Which packages came from the OS?
+- Which packages came from Python?
+- Why is `python:latest` risky?
+- Why is SBOM useful in CI/CD?
+
+## Module 2: Trivy Vulnerability Scanning
+
+Trivy scans images for known vulnerabilities.
+
+### Install Trivy on Ubuntu
+
+```bash
+sudo apt update
+sudo apt install wget apt-transport-https gnupg lsb-release -y
+```
+
+Add the Trivy repository key:
+
+```bash
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+```
+
+Add the repository:
+
+```bash
+echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+```
+
+Install Trivy:
+
+```bash
+sudo apt update
+sudo apt install trivy -y
+```
+
+Check version:
+
+```bash
+trivy --version
+```
+
+### Scan the Insecure Image
+
+```bash
+trivy image insecure-image:latest
+```
+
+Scan only high and critical vulnerabilities:
+
+```bash
+trivy image --severity HIGH,CRITICAL insecure-image:latest
+```
+
+Ignore unfixed vulnerabilities:
+
+```bash
+trivy image --ignore-unfixed insecure-image:latest
+```
+
+Save JSON output:
+
+```bash
+trivy image -f json -o trivy-report.json insecure-image:latest
+```
+
+### Scan the Production Image
 
 Build the production image:
 
 ```bash
-docker build -t genai-chat:prod .
+docker build -f Dockerfile -t genai-chat:prod .
 ```
 
-Generate an SBOM and scan the image:
+Scan it:
 
 ```bash
-cat security/sbom-and-scan.md
+trivy image genai-chat:prod
 ```
 
-Suggested tools:
+Compare:
 
-- Syft for SBOM generation
-- Trivy for CVE scanning
-- Docker Scout for CVEs and remediation recommendations
+```bash
+trivy image --severity HIGH,CRITICAL insecure-image:latest
+trivy image --severity HIGH,CRITICAL genai-chat:prod
+```
 
-Teaching points:
+### What to Discuss
 
-- SBOMs document what is inside the image.
-- Scanners find known vulnerabilities in OS and language packages.
-- Non-root users, slim images, health checks, and fewer packages reduce runtime risk.
+- Did the production image reduce the attack surface?
+- Are there fewer packages?
+- Are there fewer critical or high vulnerabilities?
+- Which vulnerabilities are from the base image?
+- Which vulnerabilities are from app dependencies?
 
-## Module 3: DevContainers and AI-Augmented Development
+## Optional: Docker Scout
 
-Open this repository in VS Code and use:
+If Docker Scout is available:
+
+```bash
+docker scout cves insecure-image:latest
+docker scout recommendations insecure-image:latest
+```
+
+## Module 3: DevContainer Discussion
+
+This repo has a DevContainer file at:
 
 ```text
-Dev Containers: Reopen in Container
+.devcontainer/devcontainer.json
 ```
 
-The file `../../.devcontainer/devcontainer.json` provides:
+Use it later to teach:
 
-- Python tooling
-- Docker CLI access from inside the dev container
-- Docker and GitHub Actions VS Code extensions
+- consistent developer environments
+- Docker CLI inside a dev container
+- VS Code Docker extension
+- GitHub Actions extension
+- AI/MCP tooling as a next step
 
-Teaching points:
+## Module 4: CI/CD Discussion
 
-- DevContainers give every learner the same development environment.
-- Docker access inside the dev container lets learners build, run, scan, and test images consistently.
-- This is the foundation for adding AI tools, MCP servers, or code agents later.
-
-## Module 4: CI/CD Automation with GitHub Actions and Docker
-
-Review:
-
-```bash
-cat ../../.github/workflows/genai-chat-build-scan-sbom.yml
-```
-
-The workflow:
-
-- builds the production Dockerfile
-- generates an SBOM
-- uploads the SBOM as an artifact
-- scans the image with Trivy
-- uploads SARIF results to GitHub code scanning
-
-Teaching points:
-
-- CI should build the same production image developers build locally.
-- SBOM and scan results should be produced automatically.
-- Pull requests can be blocked on high or critical vulnerabilities.
-
-## Run the App Directly on Ubuntu
-
-Keep Ollama in Docker:
-
-```bash
-docker compose up -d ollama
-docker compose exec ollama ollama pull qwen2.5:0.5b
-```
-
-Install Python dependencies:
-
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Run the app on the Ubuntu host:
-
-```bash
-OLLAMA_BASE_URL=http://localhost:11434 \
-OLLAMA_MODEL=qwen2.5:0.5b \
-uvicorn app.main:app --host 127.0.0.1 --port 8080
-```
-
-## Troubleshooting
-
-### The Model Is Missing
-
-```bash
-docker compose exec ollama ollama pull qwen2.5:0.5b
-```
-
-### The App Cannot Reach Ollama
-
-When the app runs inside Compose:
+This repo has a GitHub Actions workflow at:
 
 ```text
-OLLAMA_BASE_URL=http://ollama:11434
+.github/workflows/genai-chat-build-scan-sbom.yml
 ```
 
-When the app runs directly on Ubuntu:
+Use it later to teach:
 
-```text
-OLLAMA_BASE_URL=http://localhost:11434
-```
+- build image in CI
+- generate SBOM in CI
+- scan image in CI
+- upload scan results
+- push to Docker Hub after checks pass
 
-### Port 8080 Is Busy
+## Cleanup
 
-Change the host port in `compose.yaml`:
-
-```yaml
-ports:
-  - "8081:8080"
-```
-
-Then open:
-
-```text
-http://localhost:8081
-```
-
-## Clean Up
-
-Stop containers:
+Stop app containers:
 
 ```bash
 docker compose down
 ```
 
-Remove the Ollama model volume only when you want to free disk space:
+Remove the Ollama model volume only if you want to free disk space:
 
 ```bash
 docker compose down -v
 ```
+
+Remove temporary images:
+
+```bash
+docker rmi genai-chat:bad genai-chat:prod genai-chat:buildx-local insecure-image:latest
+```
+
