@@ -8,6 +8,7 @@ Students will use the same codebase across the modules:
 - Module 2: image security, SBOM generation, and vulnerability scanning
 - Module 3: DevContainer workflow for a consistent student environment
 - Module 4: GitHub Actions CI/CD for build, SBOM, scan, and Docker Hub push
+- Module 5: Dagger workflow composition for building and deploying an AI agent
 
 ## Files
 
@@ -16,13 +17,24 @@ exercises/02-genai-module-coach/
 ├── app/
 │   ├── main.py
 │   └── smoke_test.py
+├── agent_app/
+│   ├── Dockerfile
+│   ├── agent.py
+│   └── test_agent.py
+├── src/
+│   └── genai_agent_pipeline/
+│       ├── __init__.py
+│       └── main.py
 ├── Dockerfile
 ├── Dockerfile.bad
 ├── MODULE1.md
 ├── MODULE2.md
 ├── MODULE3.md
 ├── MODULE4.md
+├── MODULE5.md
 ├── compose.yaml
+├── dagger.json
+├── pyproject.toml
 ├── requirements.txt
 └── README.md
 ```
@@ -139,6 +151,7 @@ Then continue:
 MODULE2.md
 MODULE3.md
 MODULE4.md
+MODULE5.md
 ```
 
 ## Cleanup
