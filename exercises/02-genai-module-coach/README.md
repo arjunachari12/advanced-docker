@@ -1,6 +1,6 @@
 # Exercise 2: Production-Ready Docker for a Simple GenAI App
 
-This exercise uses one simple Python GenAI chat app that calls a local Ollama container.
+This exercise uses small Python GenAI apps that call local models through Ollama, Docker Model Runner, and Dagger workflows.
 
 Students will use the same codebase across the modules:
 
@@ -9,6 +9,7 @@ Students will use the same codebase across the modules:
 - Module 3: DevContainer workflow for a consistent student environment
 - Module 4: GitHub Actions CI/CD for build, SBOM, scan, and Docker Hub push
 - Module 5: Dagger workflow composition for building and deploying an AI agent
+- Module 6: Docker Model Runner for containerized local GenAI apps
 
 ## Files
 
@@ -21,17 +22,23 @@ exercises/02-genai-module-coach/
 │   ├── Dockerfile
 │   ├── agent.py
 │   └── test_agent.py
+├── model_runner_app/
+│   ├── main.py
+│   └── smoke_test.py
 ├── src/
 │   └── genai_agent_pipeline/
 │       ├── __init__.py
 │       └── main.py
 ├── Dockerfile
 ├── Dockerfile.bad
+├── Dockerfile.model-runner
 ├── MODULE1.md
 ├── MODULE2.md
 ├── MODULE3.md
 ├── MODULE4.md
 ├── MODULE5.md
+├── MODULE6.md
+├── compose.model-runner.yaml
 ├── compose.yaml
 ├── dagger.json
 ├── pyproject.toml
@@ -152,6 +159,7 @@ MODULE2.md
 MODULE3.md
 MODULE4.md
 MODULE5.md
+MODULE6.md
 ```
 
 ## Cleanup
