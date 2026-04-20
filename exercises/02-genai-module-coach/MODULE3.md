@@ -45,10 +45,10 @@ For WSL students:
 
 ## Part 1: Open in VS Code
 
-From Ubuntu or WSL:
+From Ubuntu or WSL, open the repository root, not just this exercise folder:
 
 ```bash
-cd /home/arjun/advanced-docker
+cd /path/to/advanced-docker
 code .
 ```
 
@@ -59,6 +59,12 @@ Dev Containers: Reopen in Container
 ```
 
 Wait for the container to build.
+
+If VS Code does not offer the DevContainer option, check that the folder you opened contains:
+
+```text
+.devcontainer/devcontainer.json
+```
 
 ## Part 2: Verify Tools
 
@@ -169,4 +175,3 @@ Put the development environment in code, then every student starts from the same
 ```bash
 docker compose down
 ```
-
