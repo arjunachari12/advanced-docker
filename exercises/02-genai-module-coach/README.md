@@ -2,6 +2,23 @@
 
 This exercise uses small Python GenAI apps that call local models through Ollama, Docker Model Runner, and Dagger workflows.
 
+## What This Code Does
+
+This folder is a teaching lab for containerized GenAI workflows.
+
+It includes:
+
+- a local Ollama chat app for Docker lessons
+- a Dagger-based AI agent that turns a shipping task into a short workflow plan
+- a Docker Model Runner app that calls a local model through an OpenAI-compatible API
+- a container-use style workflow that indexes docs, self-checks the generated data, and deploys a searchable doc assistant
+
+The main idea across all modules is:
+
+```text
+put AI apps and workflow steps inside containers so they are easier to run, test, debug, and teach
+```
+
 Students will use the same codebase across the modules:
 
 - Module 1: Docker build best practices, multi-stage builds, Buildx, and multi-architecture image push

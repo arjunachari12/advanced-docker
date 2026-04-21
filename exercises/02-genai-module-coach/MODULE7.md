@@ -13,6 +13,8 @@ In this module you will:
 
 The stack indexes the module notes, validates the generated index, builds a containerized API, and exposes search and question-answer endpoints.
 
+In short, this product is a small AI-powered documentation assistant. It turns a folder of Markdown notes into a searchable API and can answer questions from those notes using retrieval plus a local model when available.
+
 The workflow is intentionally small, but the pattern is real:
 
 ```text
