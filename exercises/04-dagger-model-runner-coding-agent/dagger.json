@@ -1,0 +1,7 @@
+{
+  "name": "mini-coding-agent",
+  "engineVersion": "v0.19.11",
+  "sdk": {
+    "source": "python"
+  }
+}
