@@ -5,6 +5,6 @@ services:
       dockerfile: Dockerfile.model-runner
     environment:
       MODEL_RUNNER_BASE_URL: http://model-runner.docker.internal/engines/v1
-      MODEL_RUNNER_MODEL: ai/smollm2:latest
+      MODEL_RUNNER_MODEL: ai/llama3.2:latest
     ports:
       - "8091:8091"

@@ -1,0 +1,29 @@
+name: doc-index-debug
+description: Build a small doc index, self-debug it, then run an API smoke test.
+workspace: /workspace
+steps:
+  - name: index-docs
+    image: python:3.12-slim
+    command: python tools/index_docs.py docs out/index.json
+    writes:
+      - out/index.json
+
+  - name: debug-index
+    image: python:3.12-slim
+    command: python tools/debug_index.py out/index.json
+    needs:
+      - index-docs
+
+  - name: build-api-image
+    image: docker:29-cli
+    command: docker build -f app/Dockerfile -t doc-index-ai:module7 .
+    mount_docker_socket: true
+    needs:
+      - debug-index
+
+  - name: smoke-test-api
+    image: docker:29-cli
+    command: sh tools/smoke_container.sh
+    mount_docker_socket: true
+    needs:
+      - build-api-image

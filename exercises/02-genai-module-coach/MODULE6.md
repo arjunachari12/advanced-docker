@@ -84,17 +84,19 @@ http://model-runner.docker.internal/engines/v1
 
 ## Part 1: Pull A Small Model
 
-This module uses `ai/smollm2` because it is small enough for most student machines.
+This module now recommends `ai/llama3.2` because it gives much better general answers than `ai/smollm2`.
+
+Use `ai/smollm2` only when you need the lightest possible classroom demo on a lower-spec machine.
 
 ```bash
-docker model pull ai/smollm2
+docker model pull ai/llama3.2
 docker model list
 ```
 
 Optional CLI test:
 
 ```bash
-docker model run ai/smollm2 "Explain Docker Model Runner in one sentence."
+docker model run ai/llama3.2 "Explain Docker Model Runner in one sentence."
 ```
 
 If the CLI streams for too long, stop it with `Ctrl+C`. The app uses the HTTP API with a token limit.
@@ -111,7 +113,7 @@ docker run --rm curlimages/curl:8.16.0 \
 Expected shape:
 
 ```json
-{"object":"list","data":[{"id":"ai/smollm2:latest"}]}
+{"object":"list","data":[{"id":"ai/llama3.2:latest"}]}
 ```
 
 ## Part 3: Review The App
@@ -126,7 +128,7 @@ Important environment variables:
 
 ```text
 MODEL_RUNNER_BASE_URL=http://model-runner.docker.internal/engines/v1
-MODEL_RUNNER_MODEL=ai/smollm2:latest
+MODEL_RUNNER_MODEL=ai/llama3.2:latest
 ```
 
 The app calls:
@@ -195,7 +197,7 @@ docker model ps
 Inspect a model:
 
 ```bash
-docker model inspect ai/smollm2
+docker model inspect ai/llama3.2
 ```
 
 ## Part 6: Swap Models
@@ -248,7 +250,7 @@ The containerized app does not require this when `model-runner.docker.internal` 
 
 ### Model Output Looks Weak
 
-Small models are fast and classroom-friendly, but they can produce weak answers. Try:
+If `ai/smollm2` is too weak, switch to `ai/llama3.2`. If `ai/llama3.2` is still not good enough, try another compatible model that fits your hardware. You can also try:
 
 - a larger compatible model
 - a lower temperature
@@ -259,5 +261,5 @@ Small models are fast and classroom-friendly, but they can produce weak answers.
 
 ```bash
 docker compose -f compose.model-runner.yaml down
-docker model unload ai/smollm2
+docker model unload ai/llama3.2
 ```

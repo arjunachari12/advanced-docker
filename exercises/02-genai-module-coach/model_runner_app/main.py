@@ -14,7 +14,7 @@ MODEL_RUNNER_BASE_URL = os.getenv(
     "MODEL_RUNNER_BASE_URL",
     "http://model-runner.docker.internal/engines/v1",
 ).rstrip("/")
-MODEL_RUNNER_MODEL = os.getenv("MODEL_RUNNER_MODEL", "ai/smollm2:latest")
+MODEL_RUNNER_MODEL = os.getenv("MODEL_RUNNER_MODEL", "ai/llama3.2:latest")
 
 app = FastAPI(title="Docker Model Runner GenAI App", version="1.0.0")
 

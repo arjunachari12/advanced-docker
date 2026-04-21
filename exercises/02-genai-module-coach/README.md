@@ -10,6 +10,7 @@ Students will use the same codebase across the modules:
 - Module 4: GitHub Actions CI/CD for build, SBOM, scan, and Docker Hub push
 - Module 5: Dagger workflow composition for building and deploying an AI agent
 - Module 6: Docker Model Runner for containerized local GenAI apps
+- Module 7: container-use style isolated workflows for a doc-indexing AI stack
 
 ## Files
 
@@ -25,6 +26,12 @@ exercises/02-genai-module-coach/
 ├── model_runner_app/
 │   ├── main.py
 │   └── smoke_test.py
+├── container_use_stack/
+│   ├── app/
+│   ├── docs/
+│   ├── tools/
+│   ├── workflows/
+│   └── container_use.py
 ├── src/
 │   └── genai_agent_pipeline/
 │       ├── __init__.py
@@ -38,6 +45,8 @@ exercises/02-genai-module-coach/
 ├── MODULE4.md
 ├── MODULE5.md
 ├── MODULE6.md
+├── MODULE7.md
+├── compose.container-use.yaml
 ├── compose.model-runner.yaml
 ├── compose.yaml
 ├── dagger.json
@@ -160,6 +169,7 @@ MODULE3.md
 MODULE4.md
 MODULE5.md
 MODULE6.md
+MODULE7.md
 ```
 
 ## Cleanup
